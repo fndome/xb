@@ -19,6 +19,8 @@ package xb
 import (
 	"encoding/json"
 	"time"
+	
+	"github.com/google/uuid"
 )
 
 type InsertBuilder struct {
@@ -26,6 +28,10 @@ type InsertBuilder struct {
 }
 
 func (b *InsertBuilder) Set(k string, v interface{}) *InsertBuilder {
+	// Handle nil values early
+	if v == nil {
+		return b
+	}
 
 	buffer, ok := v.([]byte)
 	if ok {
@@ -59,7 +65,27 @@ func (b *InsertBuilder) Set(k string, v interface{}) *InsertBuilder {
 			return b
 		}
 		v = n
+	case uuid.UUID:
+		// Handle uuid.UUID type - convert to string
+		uuidVal := v.(uuid.UUID)
+		if uuidVal == uuid.Nil {
+			return b
+		}
+		b.bbs = append(b.bbs, Bb{
+			Key:   k,
+			Value: uuidVal.String(),
+		})
+		return b
+	case *time.Time:
+		// Handle *time.Time pointer type
+		timePtr := v.(*time.Time)
+		if timePtr == nil {
+			return b
+		}
+		ts := timePtr.Format("2006-01-02 15:04:05")
+		v = ts
 	case time.Time:
+		// Handle time.Time value type
 		ts := v.(time.Time).Format("2006-01-02 15:04:05")
 		v = ts
 	case Vector:
@@ -72,10 +98,6 @@ func (b *InsertBuilder) Set(k string, v interface{}) *InsertBuilder {
 	case interface{}:
 		bytes, _ := json.Marshal(v)
 		v = string(bytes)
-	default:
-		if v == nil {
-			return b
-		}
 	}
 
 	b.bbs = append(b.bbs, Bb{

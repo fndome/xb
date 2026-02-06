@@ -32,15 +32,29 @@ func (built *Built) toUpdateSql(bp *strings.Builder, vs *[]interface{}) {
 
 	for i := 0; i < length; i++ {
 		u := (*built.Updates)[i]
-		bp.WriteString(u.Key)
-		if !strings.Contains(u.Key, EQ) {
-			bp.WriteString(SPACE)
-			bp.WriteString(EQ)
+		
+		// Handle X() method (Op == "SET")
+		if u.Op == "SET" {
+			bp.WriteString(u.Key)
+			if u.Value != nil {
+				arr := u.Value.([]interface{})
+				for _, v := range arr {
+					*vs = append(*vs, v)
+				}
+			}
+		} else {
+			// Handle regular Set() method
+			bp.WriteString(u.Key)
+			if !strings.Contains(u.Key, EQ) {
+				bp.WriteString(SPACE)
+				bp.WriteString(EQ)
+			}
+			if u.Value != nil {
+				bp.WriteString(PLACE_HOLDER)
+				*vs = append(*vs, u.Value)
+			}
 		}
-		if u.Value != nil {
-			bp.WriteString(PLACE_HOLDER)
-			*vs = append(*vs, u.Value)
-		}
+		
 		if i < length-1 {
 			bp.WriteString(COMMA)
 		} else {

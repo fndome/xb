@@ -19,6 +19,8 @@ package xb
 import (
 	"encoding/json"
 	"time"
+	
+	"github.com/google/uuid"
 )
 
 type UpdateBuilder struct {
@@ -26,6 +28,10 @@ type UpdateBuilder struct {
 }
 
 func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
+	// Handle nil values early
+	if v == nil {
+		return ub
+	}
 
 	buffer, ok := v.([]byte)
 	if ok {
@@ -62,7 +68,27 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 			return ub
 		}
 		v = n
+	case uuid.UUID:
+		// Handle uuid.UUID type - convert to string
+		uuidVal := v.(uuid.UUID)
+		if uuidVal == uuid.Nil {
+			return ub
+		}
+		ub.bbs = append(ub.bbs, Bb{
+			Key:   k,
+			Value: uuidVal.String(),
+		})
+		return ub
+	case *time.Time:
+		// Handle *time.Time pointer type
+		timePtr := v.(*time.Time)
+		if timePtr == nil {
+			return ub
+		}
+		ts := timePtr.Format("2006-01-02 15:04:05")
+		v = ts
 	case time.Time:
+		// Handle time.Time value type
 		ts := v.(time.Time).Format("2006-01-02 15:04:05")
 		v = ts
 	case Vector:
@@ -75,10 +101,6 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 	case interface{}:
 		bytes, _ := json.Marshal(v)
 		v = string(bytes)
-	default:
-		if v == nil {
-			return ub
-		}
 	}
 
 	ub.bbs = append(ub.bbs, Bb{
@@ -89,11 +111,15 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 }
 
 func (ub *UpdateBuilder) X(s string, vs ...interface{}) *UpdateBuilder {
-	ub.bbs = append(ub.bbs, Bb{
-		Op:    "SET",
-		Key:   s,
-		Value: vs,
-	})
+	bb := Bb{
+		Op:  "SET",
+		Key: s,
+	}
+	// Only set Value if there are actual parameters
+	if len(vs) > 0 {
+		bb.Value = vs
+	}
+	ub.bbs = append(ub.bbs, bb)
 	return ub
 }
 

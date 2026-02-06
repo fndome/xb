@@ -418,9 +418,12 @@ func (cb *CondBuilder) NonNull(key string) *CondBuilder {
 //	})
 func (cb *CondBuilder) X(k string, vs ...interface{}) *CondBuilder {
 	bb := Bb{
-		Op:    XX,
-		Key:   k,
-		Value: vs,
+		Op:  XX,
+		Key: k,
+	}
+	// Only set Value if there are actual parameters
+	if len(vs) > 0 {
+		bb.Value = vs
 	}
 	cb.bbs = append(cb.bbs, bb)
 	return cb
