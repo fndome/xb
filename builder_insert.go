@@ -84,6 +84,17 @@ func (b *InsertBuilder) Set(k string, v interface{}) *InsertBuilder {
 		}
 		ts := timePtr.Format("2006-01-02 15:04:05")
 		v = ts
+	case *string:
+		// 场景：调用方传入 nil *string（如 models.User 的 Phone、Email 未赋值）。
+		// 问题环节：v 的类型是 *string、值是 nil 时，v == nil 为 false（interface 里存的是 (type=*string, value=nil)），
+		// 不会在第 32 行 return；switch 里又没有 *string 分支，会落到 case interface{}，执行 json.Marshal(v)。
+		// json.Marshal(nil指针) 得到字节 "null"，string(bytes) 即字符串 "null"，被当作普通字符串插入 DB。
+		// 修复：单独处理 *string，nil 则忽略不插入，非 nil 则取 *sptr 插入。
+		sptr := v.(*string)
+		if sptr == nil {
+			return b
+		}
+		v = *sptr
 	case time.Time:
 		// Handle time.Time value type
 		ts := v.(time.Time).Format("2006-01-02 15:04:05")

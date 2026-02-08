@@ -87,6 +87,13 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 		}
 		ts := timePtr.Format("2006-01-02 15:04:05")
 		v = ts
+	case *string:
+		// 与 Insert 相同：nil *string 时 v==nil 为 false，会落入 interface{} 被 json.Marshal 成 "null" 写入库；此处 nil 忽略，非 nil 取 *sptr。
+		sptr := v.(*string)
+		if sptr == nil {
+			return ub
+		}
+		v = *sptr
 	case time.Time:
 		// Handle time.Time value type
 		ts := v.(time.Time).Format("2006-01-02 15:04:05")
