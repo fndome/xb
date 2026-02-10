@@ -106,9 +106,8 @@ func (b *InsertBuilder) Set(k string, v interface{}) *InsertBuilder {
 	case []float32, []float64:
 		// ⭐ Vector array: keep as is (for Qdrant/Milvus)
 		// No JSON serialization
-	case interface{}:
-		bytes, _ := json.Marshal(v)
-		v = string(bytes)
+	// 不添加 case interface{}：实现 driver.Valuer 的结构体（如 BubbleKeywords）应原样传递，
+	// 由 database/sql 调用 Value()；若落入 interface{} 会被 json.Marshal 错误处理
 	}
 
 	b.bbs = append(b.bbs, Bb{

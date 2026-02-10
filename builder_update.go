@@ -55,9 +55,7 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 
 	switch v.(type) {
 	case string:
-		if v.(string) == "" {
-			return ub
-		}
+		// 空字符串也参与更新，允许显式将字段设为 ""
 	case uint64, uint, int64, int, int32, int16, int8, bool, byte, float64, float32:
 		if v == 0 {
 			return ub
@@ -105,9 +103,7 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 	case []float32, []float64:
 		// ⭐ Vector array: keep as is (for Qdrant/Milvus)
 		// No JSON serialization
-	case interface{}:
-		bytes, _ := json.Marshal(v)
-		v = string(bytes)
+	// 不添加 case interface{}：实现 driver.Valuer 的结构体应原样传递，由 database/sql 调用 Value()
 	}
 
 	ub.bbs = append(ub.bbs, Bb{
