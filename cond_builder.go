@@ -152,8 +152,7 @@ func (cb *CondBuilder) doGLE(p string, k string, v interface{}) *CondBuilder {
 	case time.Time:
 		ts := v.(time.Time).Format("2006-01-02 15:04:05")
 		return cb.addBb(p, k, ts)
-	case interface{}:
-		panic("Builder.doGLE(ke, obj, [] ? ...")
+	// 不添加 case interface{}：实现 driver.Valuer 的结构体应原样传递，由 database/sql 调用 Value()
 	default:
 		if v == nil {
 			return cb
