@@ -55,7 +55,10 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 
 	switch v.(type) {
 	case string:
-		// 空字符串也参与更新，允许显式将字段设为 ""
+		// "" 忽略，不参与更新；显式置空请用 X("col = ''")
+		if v == "" {
+			return ub
+		}
 	case uint64, uint, int64, int, int32, int16, int8, bool, byte, float64, float32:
 		if v == 0 {
 			return ub
@@ -86,9 +89,9 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 		ts := timePtr.Format("2006-01-02 15:04:05")
 		v = ts
 	case *string:
-		// 与 Insert 相同：nil *string 时 v==nil 为 false，会落入 interface{} 被 json.Marshal 成 "null" 写入库；此处 nil 忽略，非 nil 取 *sptr。
+		// nil 忽略；*sptr 为 "" 也忽略（与 case string 一致）；非 nil 且非 "" 则取 *sptr 参与更新
 		sptr := v.(*string)
-		if sptr == nil {
+		if sptr == nil || *sptr == "" {
 			return ub
 		}
 		v = *sptr
