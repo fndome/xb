@@ -19,7 +19,7 @@ package xb
 import (
 	"encoding/json"
 	"time"
-	
+
 	"github.com/google/uuid"
 )
 
@@ -106,7 +106,7 @@ func (ub *UpdateBuilder) Set(k string, v interface{}) *UpdateBuilder {
 	case []float32, []float64:
 		// ⭐ Vector array: keep as is (for Qdrant/Milvus)
 		// No JSON serialization
-	// 不添加 case interface{}：实现 driver.Valuer 的结构体应原样传递，由 database/sql 调用 Value()
+		// 不添加 case interface{}：实现 driver.Valuer 的结构体应原样传递，由 database/sql 调用 Value()
 	}
 
 	ub.bbs = append(ub.bbs, Bb{
