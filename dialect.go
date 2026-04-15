@@ -101,6 +101,9 @@ type Custom interface {
 
 var customGlobal Custom
 
+// CustomGlobal sets the global Custom implementation (only set once, subsequent calls are ignored)
+// Only for the dialect without additional builder API (e.g., Oracle, PostgreSQL, etc.)
+// Can not be used for vector databases (Qdrant/Milvus/Weaviate) because they require additional builder API for configuration
 func CustomGlobal(custom Custom) {
 	if customGlobal == nil {
 		customGlobal = custom
