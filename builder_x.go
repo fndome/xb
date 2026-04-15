@@ -423,6 +423,10 @@ func (x *BuilderX) Build() *Built {
 		panic("xb.Builder is nil")
 	}
 
+	if x.customImpl == nil && customGlobal != nil {
+		x.customImpl = customGlobal
+	}
+
 	// ⭐ Execute BeforeBuild interceptors (only set metadata)
 	for _, ic := range interceptor.GetAll() {
 		if err := ic.BeforeBuild(x.ensureMeta()); err != nil {

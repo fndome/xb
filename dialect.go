@@ -99,6 +99,14 @@ type Custom interface {
 	Generate(built *Built) (interface{}, error)
 }
 
+var customGlobal Custom
+
+func CustomGlobal(custom Custom) {
+	if customGlobal == nil {
+		customGlobal = custom
+	}
+}
+
 // ============================================================================
 // Notes and Use Cases
 // ============================================================================
